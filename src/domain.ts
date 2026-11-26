@@ -1,0 +1,10 @@
+export type Modalidade='Mostra Nacional'|'Mostra de Extensão';
+export type Projeto={id:string;titulo:string;modalidade:Modalidade;area_tematica:string;data:string;inicio:string;fim:string;formato:string;local:string;fontes:{arquivo:string;pagina:number}[]};
+export const criterios=[{nome:'Criatividade e inovação',peso:.30},{nome:'Clareza da apresentação',peso:.30},{nome:'Relevância e impacto',peso:.25},{nome:'Demonstração e resultados',peso:.15}] as const;
+export const rotulos=['','Muito ruim','Ruim','Regular','Bom','Excelente'];
+export function calcular(notas:number[]):number {if(notas.length!==4||notas.some(n=>!Number.isInteger(n)||n<1||n>5))throw Error('Informe quatro notas inteiras entre 1 e 5');return Math.round(notas.reduce((s,n,i)=>s+n*criterios[i].peso,0)*100)/100;}
+export function normalizar(s:string){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+export function filtrar(projetos:Projeto[],f:{busca?:string;modalidade?:string;area?:string;data?:string}){return projetos.filter(p=>(!f.busca||normalizar(p.titulo).includes(normalizar(f.busca)))&&(!f.modalidade||p.modalidade===f.modalidade)&&(!f.area||p.area_tematica===f.area)&&(!f.data||p.data===f.data));}
+export function validarCatalogo(p:Projeto[]){const ids=new Set(p.map(x=>x.id));return p.length===46&&ids.size===46&&p.filter(x=>/^NAC-\d{3}$/.test(x.id)).length===24&&p.filter(x=>/^EXT-\d{3}$/.test(x.id)).length===22&&p.every(x=>['id','titulo','modalidade','area_tematica','data','inicio','fim','formato','local','fontes'].every(k=>Object.hasOwn(x,k)));}
+export type RankingItem={id_projeto:string;media:number;quantidade:number;medias_criterios:number[];atualizado_em:string;posicao?:number|null};
+export function ordenarRanking(items:RankingItem[],minimo=5){const validos=items.filter(x=>x.quantidade>=minimo).sort((a,b)=>b.media-a.media||b.quantidade-a.quantidade||a.id_projeto.localeCompare(b.id_projeto));return [...validos.map((x,i)=>({...x,posicao:i+1})),...items.filter(x=>x.quantidade<minimo).sort((a,b)=>a.id_projeto.localeCompare(b.id_projeto)).map(x=>({...x,posicao:null}))];}
